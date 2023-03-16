@@ -273,9 +273,11 @@ class RoomClient {
   //////// MAIN FUNCTIONS /////////////
 
   async produce(type, deviceId = null) {
+    debugger;
     let mediaConstraints = {};
     let audio = false;
     let screen = false;
+    var sysAudio = false;
     switch (type) {
       case mediaType.audio:
         mediaConstraints = {
@@ -306,7 +308,7 @@ class RoomClient {
         };
         break;
       case mediaType.screen:
-        mediaConstraints = false;
+        audio = true;
         screen = true;
         break;
       default:
@@ -328,93 +330,225 @@ class RoomClient {
         : await navigator.mediaDevices.getUserMedia(mediaConstraints);
       console.log(navigator.mediaDevices.getSupportedConstraints());
 
-      const track = audio
-        ? stream.getAudioTracks()[0]
-        : stream.getVideoTracks()[0];
-      const params = {
-        track,
-      };
+      console.log("stream.getAudioTracks()[0]", stream.getAudioTracks()[0]);
+      console.log("stream.getVideoTracks()[0]", stream.getVideoTracks()[0]);
+
+      debugger;
+      var params = {};
+      var params1 = {};
+      var params2 = {};
+      var track = null;
+      let elem;
+      if (screen == false) {
+        track = audio ? stream.getAudioTracks()[0] : stream.getVideoTracks()[0];
+        params = {
+          track,
+        };
+      } else {
+        track = stream.getAudioTracks()[0];
+
+        console.log("track", track);
+
+        if (track !== undefined) {
+          sysAudio = true;
+        }
+        params1 = {
+          track,
+        };
+
+        track = stream.getVideoTracks()[0];
+
+        params2 = {
+          track,
+        };
+      }
       if (!audio && !screen) {
         params.encodings = [
           {
             rid: "r0",
             maxBitrate: 100000,
             //scaleResolutionDownBy: 10.0,
-            scalabilityMode: "S1T3",
+            scalabilityMode: "L1T3",
           },
           {
             rid: "r1",
             maxBitrate: 300000,
-            scalabilityMode: "S1T3",
+            scalabilityMode: "L1T3",
           },
           {
             rid: "r2",
             maxBitrate: 900000,
-            scalabilityMode: "S1T3",
+            scalabilityMode: "L1T3",
           },
         ];
         params.codecOptions = {
           videoGoogleStartBitrate: 1000,
         };
       }
-      producer = await this.producerTransport.produce(params);
 
-      console.log("Producer", producer);
+      if (screen == false) {
+        producer = await this.producerTransport.produce(params);
+        console.log("Producer", producer);
+        this.producers.set(producer.id, producer);
+        if (!audio) {
+          elem = document.createElement("video");
+          elem.srcObject = stream;
+          elem.id = producer.id;
+          elem.playsinline = false;
+          elem.autoplay = true;
+          elem.muted = true;
+          elem.className = "vid";
+          this.localMediaEl.appendChild(elem);
+          this.handleFS(elem.id);
+        }
 
-      this.producers.set(producer.id, producer);
+        producer.on("trackended", () => {
+          this.closeProducer(type);
+        });
 
-      let elem;
-      if (!audio) {
+        producer.on("transportclose", () => {
+          console.log("Producer transport close");
+          if (!audio) {
+            elem.srcObject.getTracks().forEach(function (track) {
+              track.stop();
+            });
+            elem.parentNode.removeChild(elem);
+          }
+          this.producers.delete(producer.id);
+        });
+
+        producer.on("close", () => {
+          console.log("Closing producer");
+          if (!audio) {
+            elem.srcObject.getTracks().forEach(function (track) {
+              track.stop();
+            });
+            elem.parentNode.removeChild(elem);
+          }
+          this.producers.delete(producer.id);
+        });
+
+        this.producerLabel.set(type, producer.id);
+
+        switch (type) {
+          case mediaType.audio:
+            this.event(_EVENTS.startAudio);
+            break;
+          case mediaType.video:
+            this.event(_EVENTS.startVideo);
+            break;
+          case mediaType.screen:
+            this.event(_EVENTS.startScreen);
+            break;
+          default:
+            return;
+        }
+      } else {
+        if (sysAudio) {
+          params = params1;
+          producer = await this.producerTransport.produce(params);
+          console.log("Producer", producer);
+          this.producers.set(producer.id, producer);
+
+          producer.on("trackended", () => {
+            this.closeProducer(type);
+          });
+
+          producer.on("transportclose", () => {
+            console.log("Producer transport close");
+            if (!audio) {
+              elem.srcObject.getTracks().forEach(function (track) {
+                track.stop();
+              });
+              elem.parentNode.removeChild(elem);
+            }
+            this.producers.delete(producer.id);
+          });
+
+          producer.on("close", () => {
+            console.log("Closing producer");
+            if (!audio) {
+              elem.srcObject.getTracks().forEach(function (track) {
+                track.stop();
+              });
+              elem.parentNode.removeChild(elem);
+            }
+            this.producers.delete(producer.id);
+          });
+
+          this.producerLabel.set(type, producer.id);
+
+          switch (type) {
+            case mediaType.audio:
+              this.event(_EVENTS.startAudio);
+              break;
+            case mediaType.video:
+              this.event(_EVENTS.startVideo);
+              break;
+            case mediaType.screen:
+              this.event(_EVENTS.startScreen);
+              break;
+            default:
+              return;
+          }
+        }
+
+        params = params2;
+        producer = await this.producerTransport.produce(params);
+        console.log("Producer", producer);
+        this.producers.set(producer.id, producer);
+
         elem = document.createElement("video");
         elem.srcObject = stream;
         elem.id = producer.id;
         elem.playsinline = false;
         elem.autoplay = true;
+        elem.muted = true;
         elem.className = "vid";
         this.localMediaEl.appendChild(elem);
         this.handleFS(elem.id);
-      }
 
-      producer.on("trackended", () => {
-        this.closeProducer(type);
-      });
+        producer.on("trackended", () => {
+          this.closeProducer(type);
+        });
 
-      producer.on("transportclose", () => {
-        console.log("Producer transport close");
-        if (!audio) {
-          elem.srcObject.getTracks().forEach(function (track) {
-            track.stop();
-          });
-          elem.parentNode.removeChild(elem);
+        producer.on("transportclose", () => {
+          console.log("Producer transport close");
+          if (!audio) {
+            elem.srcObject.getTracks().forEach(function (track) {
+              track.stop();
+            });
+            elem.parentNode.removeChild(elem);
+          }
+          this.producers.delete(producer.id);
+        });
+
+        producer.on("close", () => {
+          console.log("Closing producer");
+          if (!audio) {
+            elem.srcObject.getTracks().forEach(function (track) {
+              track.stop();
+            });
+            elem.parentNode.removeChild(elem);
+          }
+          this.producers.delete(producer.id);
+        });
+
+        this.producerLabel.set(type, producer.id);
+
+        switch (type) {
+          case mediaType.audio:
+            this.event(_EVENTS.startAudio);
+            break;
+          case mediaType.video:
+            this.event(_EVENTS.startVideo);
+            break;
+          case mediaType.screen:
+            this.event(_EVENTS.startScreen);
+            break;
+          default:
+            return;
         }
-        this.producers.delete(producer.id);
-      });
-
-      producer.on("close", () => {
-        console.log("Closing producer");
-        if (!audio) {
-          elem.srcObject.getTracks().forEach(function (track) {
-            track.stop();
-          });
-          elem.parentNode.removeChild(elem);
-        }
-        this.producers.delete(producer.id);
-      });
-
-      this.producerLabel.set(type, producer.id);
-
-      switch (type) {
-        case mediaType.audio:
-          this.event(_EVENTS.startAudio);
-          break;
-        case mediaType.video:
-          this.event(_EVENTS.startVideo);
-          break;
-        case mediaType.screen:
-          this.event(_EVENTS.startScreen);
-          break;
-        default:
-          return;
       }
     } catch (err) {
       console.log("Produce error:", err);
@@ -493,12 +627,14 @@ class RoomClient {
   }
 
   closeProducer(type) {
+    debugger;
     if (!this.producerLabel.has(type)) {
       console.log("There is no producer for this type " + type);
       return;
     }
 
     let producer_id = this.producerLabel.get(type);
+    console.log("this", this);
     console.log("Close producer", producer_id);
 
     this.socket.emit("producerClosed", {
@@ -511,6 +647,7 @@ class RoomClient {
 
     if (type !== mediaType.audio) {
       let elem = document.getElementById(producer_id);
+      console.log("elem.srcObject", elem.srcObject);
       elem.srcObject.getTracks().forEach(function (track) {
         track.stop();
       });
