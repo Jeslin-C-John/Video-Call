@@ -25,7 +25,6 @@ function joinRoom(name, room_id) {
   if (rc && rc.isOpen()) {
     console.log("Already connected to a room");
   } else {
-    debugger;
     initEnumerateDevices();
 
     rc = new RoomClient(

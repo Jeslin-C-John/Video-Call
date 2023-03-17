@@ -14,6 +14,9 @@ const _EVENTS = {
   stopScreen: "stopScreen",
 };
 
+var audioProducerId = null;
+var sysAudio = false;
+
 class RoomClient {
   constructor(
     localMediaEl,
@@ -273,11 +276,9 @@ class RoomClient {
   //////// MAIN FUNCTIONS /////////////
 
   async produce(type, deviceId = null) {
-    debugger;
     let mediaConstraints = {};
     let audio = false;
     let screen = false;
-    var sysAudio = false;
     switch (type) {
       case mediaType.audio:
         mediaConstraints = {
@@ -333,7 +334,6 @@ class RoomClient {
       console.log("stream.getAudioTracks()[0]", stream.getAudioTracks()[0]);
       console.log("stream.getVideoTracks()[0]", stream.getVideoTracks()[0]);
 
-      debugger;
       var params = {};
       var params1 = {};
       var params2 = {};
@@ -449,6 +449,8 @@ class RoomClient {
           producer = await this.producerTransport.produce(params);
           console.log("Producer", producer);
           this.producers.set(producer.id, producer);
+
+          audioProducerId = producer.id;
 
           producer.on("trackended", () => {
             this.closeProducer(type);
@@ -627,7 +629,6 @@ class RoomClient {
   }
 
   closeProducer(type) {
-    debugger;
     if (!this.producerLabel.has(type)) {
       console.log("There is no producer for this type " + type);
       return;
@@ -664,8 +665,34 @@ class RoomClient {
       case mediaType.screen:
         this.event(_EVENTS.stopScreen);
         break;
-      default:
-        return;
+    }
+    console.log(audioProducerId);
+    if (audioProducerId != null && type == "screenType" && sysAudio) {
+      let producer_id = audioProducerId;
+      console.log("audioProducerId", audioProducerId);
+      console.log("Close producer", producer_id);
+
+      this.socket.emit("producerClosed", {
+        producer_id,
+      });
+
+      this.producers.get(producer_id).close();
+      this.producers.delete(producer_id);
+      this.producerLabel.delete(type);
+
+      switch (type) {
+        case mediaType.audio:
+          this.event(_EVENTS.stopAudio);
+          break;
+        case mediaType.video:
+          this.event(_EVENTS.stopVideo);
+          break;
+        case mediaType.screen:
+          this.event(_EVENTS.stopScreen);
+          break;
+        default:
+          return;
+      }
     }
   }
 
