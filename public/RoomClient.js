@@ -334,6 +334,9 @@ class RoomClient {
 
       console.log("stream.getAudioTracks()[0]", stream.getAudioTracks()[0]);
       console.log("stream.getVideoTracks()[0]", stream.getVideoTracks()[0]);
+
+      if (stream.getAudioTracks()[0] != undefined) sysAudio = true;
+
       var params = {};
       var params1 = {};
       var params2 = {};
@@ -742,6 +745,8 @@ class RoomClient {
       });
       elem.parentNode.removeChild(elem);
     }
+
+    sysAudio = false;
 
     let clean = function () {
       this._isOpen = false;
