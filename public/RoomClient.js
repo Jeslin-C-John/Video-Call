@@ -639,10 +639,7 @@ class RoomClient {
       return;
     }
 
-    if (type == "screenType") {
-      videoProducerId = null;
-      audioProducerId = null;
-    }
+
 
     let producer_id = this.producerLabel.get(type);
     console.log("this", this);
@@ -703,6 +700,10 @@ class RoomClient {
         default:
           return;
       }
+    }
+    if (type == "screenType") {
+      videoProducerId = null;
+      audioProducerId = null;
     }
   }
 
