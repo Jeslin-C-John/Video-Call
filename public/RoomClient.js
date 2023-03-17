@@ -15,6 +15,7 @@ const _EVENTS = {
 };
 
 var audioProducerId = null;
+var videoProducerId = null;
 var sysAudio = false;
 
 class RoomClient {
@@ -333,7 +334,6 @@ class RoomClient {
 
       console.log("stream.getAudioTracks()[0]", stream.getAudioTracks()[0]);
       console.log("stream.getVideoTracks()[0]", stream.getVideoTracks()[0]);
-
       var params = {};
       var params1 = {};
       var params2 = {};
@@ -345,16 +345,16 @@ class RoomClient {
           track,
         };
       } else {
-        track = stream.getAudioTracks()[0];
+        if (sysAudio) track = stream.getAudioTracks()[0];
 
         console.log("track", track);
 
-        if (track !== undefined) {
+        if (track !== null) {
           sysAudio = true;
+          params1 = {
+            track,
+          };
         }
-        params1 = {
-          track,
-        };
 
         track = stream.getVideoTracks()[0];
 
@@ -500,6 +500,8 @@ class RoomClient {
         console.log("Producer", producer);
         this.producers.set(producer.id, producer);
 
+        videoProducerId = producer.id;
+
         elem = document.createElement("video");
         elem.srcObject = stream;
         elem.id = producer.id;
@@ -634,6 +636,11 @@ class RoomClient {
       return;
     }
 
+    if (type == "screenType") {
+      videoProducerId = null;
+      audioProducerId = null;
+    }
+
     let producer_id = this.producerLabel.get(type);
     console.log("this", this);
     console.log("Close producer", producer_id);
@@ -727,6 +734,15 @@ class RoomClient {
   }
 
   exit(offline = false) {
+    if (videoProducerId != null) {
+      let elem = document.getElementById(videoProducerId);
+      console.log("elem.srcObject", elem.srcObject);
+      elem.srcObject.getTracks().forEach(function (track) {
+        track.stop();
+      });
+      elem.parentNode.removeChild(elem);
+    }
+
     let clean = function () {
       this._isOpen = false;
       this.consumerTransport.close();
