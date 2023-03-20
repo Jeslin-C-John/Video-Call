@@ -99,6 +99,8 @@ class RoomClient {
           this.device = device;
           await this.initTransports(device);
           this.socket.emit("getProducers");
+          this.produce(RoomClient.mediaType.video, videoSelect.value);
+          this.produce(RoomClient.mediaType.audio, audioSelect.value);
         }.bind(this)
       )
       .catch((err) => {
@@ -335,7 +337,7 @@ class RoomClient {
       console.log("stream.getAudioTracks()[0]", stream.getAudioTracks()[0]);
       console.log("stream.getVideoTracks()[0]", stream.getVideoTracks()[0]);
 
-      if (stream.getAudioTracks()[0] != undefined) sysAudio = true;
+      if (stream.getAudioTracks()[0] != undefined && type == "screenType") sysAudio = true;
 
       var params = {};
       var params1 = {};
@@ -670,6 +672,7 @@ class RoomClient {
         this.event(_EVENTS.stopVideo);
         break;
       case mediaType.screen:
+        sysAudio = false;
         this.event(_EVENTS.stopScreen);
         break;
     }
