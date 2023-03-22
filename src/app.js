@@ -47,9 +47,9 @@ let nextMediasoupWorkerIdx = 0
  */
 let roomList = new Map()
 
-;(async () => {
-  await createWorkers()
-})()
+  ; (async () => {
+    await createWorkers()
+  })()
 
 async function createWorkers() {
   let { numWorkers } = config.mediasoup
@@ -235,7 +235,30 @@ io.on('connection', (socket) => {
 
     callback('successfully exited room')
   })
+
+
+  socket.on('getParticipantList', (clientRoom, callback) => {
+    let roomDetails = getRoomDetails(clientRoom);
+    const resp = JSON.stringify([...roomDetails.peers.entries()].map(([id, peer]) => ({
+      id,
+      name: peer.name,
+      transports: [...peer.transports],
+      consumers: [...peer.consumers],
+      producers: [...peer.producers]
+    })));
+
+    callback(resp);
+  });
+
 })
+
+function getRoomDetails(room_id) {
+  if (roomList.has(room_id)) {
+    return roomList.get(room_id);
+  } else {
+    return null;
+  }
+}
 
 // TODO remove - never used?
 function room() {
