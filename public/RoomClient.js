@@ -106,7 +106,8 @@ class RoomClient {
             var room_id_string = room_id.toString();
             socket.emit('getParticipantList', room_id_string, (roomDetails) => {
               var roomDetailsObj = JSON.parse(roomDetails);
-              console.log(roomDetailsObj);
+              var dateNow = new Date().toLocaleTimeString();
+              console.log(dateNow, roomDetailsObj);
             });
           }, 3000);
         }.bind(this)
