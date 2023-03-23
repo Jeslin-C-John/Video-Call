@@ -239,14 +239,17 @@ io.on('connection', (socket) => {
 
   socket.on('getParticipantList', (clientRoom, callback) => {
     let roomDetails = getRoomDetails(clientRoom);
-    const resp = JSON.stringify([...roomDetails.peers.entries()].map(([id, peer]) => ({
-      id,
-      name: peer.name,
-      transports: [...peer.transports],
-      consumers: [...peer.consumers],
-      producers: [...peer.producers]
-    })));
-
+    try {
+      var resp = JSON.stringify([...roomDetails.peers.entries()].map(([id, peer]) => ({
+        id,
+        name: peer.name,
+        transports: [...peer.transports],
+        consumers: [...peer.consumers],
+        producers: [...peer.producers]
+      })));
+    } catch (error) {
+      var resp = null;
+    }
     callback(resp);
   });
 
