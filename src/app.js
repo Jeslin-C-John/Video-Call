@@ -179,10 +179,16 @@ io.on('connection', (socket) => {
     //TODO null handling
     let params = await roomList.get(socket.room_id).consume(socket.id, consumerTransportId, producerId, rtpCapabilities)
 
+    if (params == null) {
+      console.log("...................")
+      console.log("params is null");
+      console.log("...................")
+    }
+
     console.log('Consuming', {
       name: `${roomList.get(socket.room_id) && roomList.get(socket.room_id).getPeers().get(socket.id).name}`,
       producer_id: `${producerId}`,
-      consumer_id: `${params.id}`
+      consumer_id: `${(params == null) ? null : params.id}`
     })
 
     callback(params)

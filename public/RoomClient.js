@@ -100,14 +100,18 @@ class RoomClient {
           this.device = device;
           await this.initTransports(device);
           this.socket.emit("getProducers");
-          this.produce(RoomClient.mediaType.video, videoSelect.value);
-          this.produce(RoomClient.mediaType.audio, audioSelect.value);
+          // this.produce(RoomClient.mediaType.video, videoSelect.value);
+          // this.produce(RoomClient.mediaType.audio, audioSelect.value);
           setInterval(function () {
             var room_id_string = room_id.toString();
             socket.emit('getParticipantList', room_id_string, (roomDetails) => {
               if (roomDetails != null) {
                 var roomDetailsObj = JSON.parse(roomDetails);
                 var dateNow = new Date().toLocaleTimeString();
+                document.getElementById("participantList").innerHTML = "";
+                roomDetailsObj.forEach(element => {
+                  document.getElementById("participantList").innerHTML += "<p class='participantName'>" + element.name + "</p>";
+                });
                 console.log(dateNow, roomDetailsObj);
               }
             });

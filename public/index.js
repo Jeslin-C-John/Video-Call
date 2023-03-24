@@ -1,11 +1,12 @@
 if (location.href.substr(0, 5) !== "https")
   location.href = "https" + location.href.substr(4, location.href.length - 4);
 
-const socket = io();
+const socket = io("wss://192.168.1.105:4200");
 
 let producer = null;
 
-nameInput.value = "user_" + Math.round(Math.random() * 1000);
+// nameInput.value = "user_" + Math.round(Math.random() * 1000);
+nameInput.value = "Enter your name here!";
 
 socket.request = function request(type, data = {}) {
   return new Promise((resolve, reject) => {
