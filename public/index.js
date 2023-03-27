@@ -1,7 +1,7 @@
 if (location.href.substr(0, 5) !== "https")
   location.href = "https" + location.href.substr(4, location.href.length - 4);
 
-const socket = io("wss://192.168.1.105:4200");
+const socket = io();
 
 let producer = null;
 

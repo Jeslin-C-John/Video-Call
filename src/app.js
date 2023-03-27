@@ -243,7 +243,7 @@ io.on('connection', (socket) => {
   })
 
 
-  socket.on('getParticipantList', (clientRoom, callback) => {
+  socket.on('getParticipantList', (clientRoom) => {
     let roomDetails = getRoomDetails(clientRoom);
     try {
       var resp = JSON.stringify([...roomDetails.peers.entries()].map(([id, peer]) => ({
@@ -256,7 +256,7 @@ io.on('connection', (socket) => {
     } catch (error) {
       var resp = null;
     }
-    callback(resp);
+    io.sockets.emit('updatedParticipants', resp);
   });
 
 })
