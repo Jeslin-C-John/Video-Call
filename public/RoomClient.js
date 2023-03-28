@@ -78,11 +78,17 @@ class RoomClient {
 
 
 
-  getparticipantList(room_id) {
-    var room_id_string = room_id.toString();
-    socket.emit('getParticipantList', room_id_string);
+  async getparticipantList(room_id) {
+    await this.socket.emit('updateRoom');
+    await this.socket.on('roomUpdateBroadcast', () => {
+      this.updateRoom(room_id);
+    });
 
-    socket.on('updatedParticipants', (roomDetails) => {
+  }
+
+  async updateRoom(room_id) {
+    var room_id_string = room_id.toString();
+    socket.emit('getParticipantList', room_id_string, (roomDetails) => {
       if (roomDetails != null) {
         var roomDetailsObj = JSON.parse(roomDetails);
         var dateNow = new Date().toLocaleTimeString();
@@ -92,7 +98,8 @@ class RoomClient {
         });
         console.log(dateNow, roomDetailsObj);
       }
-    });
+    })
+
   }
 
   async createRoom(room_id) {
@@ -303,7 +310,6 @@ class RoomClient {
   //////// MAIN FUNCTIONS /////////////
 
   async replace(type, deviceId = null) {
-    debugger;
     let mediaConstraints = {}
     let audio = false
     switch (type) {
@@ -973,7 +979,7 @@ class RoomClient {
     } else {
       clean();
     }
-
+    this.getparticipantList(this.room_id);
     this.event(_EVENTS.exitRoom);
   }
 
