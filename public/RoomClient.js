@@ -795,6 +795,8 @@ class RoomClient {
           this.remoteAudioEl.appendChild(elem);
         }
 
+        this.getparticipantList(this.room_id);
+
         consumer.on(
           "trackended",
           function () {
