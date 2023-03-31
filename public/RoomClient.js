@@ -92,13 +92,48 @@ class RoomClient {
       if (roomDetails != null) {
         var roomDetailsObj = JSON.parse(roomDetails);
         var dateNow = new Date().toLocaleTimeString();
-        document.getElementById("participantList").innerHTML = "";
-        roomDetailsObj.forEach(element => {
-          document.getElementById("participantList").innerHTML += "<p class='participantName'>" + element.name + "</p>";
+        var participantList = document.getElementById("participantList");
+        participantList.innerHTML = "";
+        roomDetailsObj.forEach(participantElement => {
+          var row = document.createElement("tr");
+          var nameCell = document.createElement("td");
+          nameCell.innerText = participantElement.name;
+          var buttonCell = document.createElement("td");
+          var button = document.createElement("button");
+          button.innerText = "Mute";
+          button.id = participantElement.id;
+          button.addEventListener("click", async function () {
+            var producerIdcsv = button.getAttribute("data-producerArray");
+            const selectedProducerArray = producerIdcsv.split(',');
+            await rc.pauseConsumer(selectedProducerArray);
+          });
+          buttonCell.appendChild(button);
+          row.appendChild(nameCell);
+          row.appendChild(buttonCell);
+          participantList.appendChild(row);
+
+          var producerArray = [];
+          participantElement.producers.forEach(producerElement => {
+            producerArray.push(producerElement[0]);
+          });
+          button.setAttribute(`data-producerArray`, producerArray);
         });
         console.log(dateNow, roomDetailsObj);
       }
-    })
+    });
+  }
+
+
+  async pauseConsumer(producerArr) {
+
+
+    const divElement = document.querySelector('#remoteAudios');
+    const audioElementsArr = divElement.getElementsByTagName('audio');
+
+    for (let i = 0; i < audioElementsArr.length; i++) {
+      const audioId = audioElementsArr[i].getAttribute('data-producer_id');
+      console.log(audioId)
+    }
 
   }
 
@@ -781,6 +816,7 @@ class RoomClient {
           elem = document.createElement("video");
           elem.srcObject = stream;
           elem.id = consumer.id;
+          elem.setAttribute("data-producer_id", producer_id);
           elem.playsinline = false;
           elem.autoplay = true;
           elem.className = "vid";
@@ -790,6 +826,7 @@ class RoomClient {
           elem = document.createElement("audio");
           elem.srcObject = stream;
           elem.id = consumer.id;
+          elem.setAttribute("data-producer_id", producer_id);
           elem.playsinline = false;
           elem.autoplay = true;
           this.remoteAudioEl.appendChild(elem);
