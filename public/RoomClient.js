@@ -105,7 +105,7 @@ class RoomClient {
           button.addEventListener("click", async function () {
             var producerIdcsv = button.getAttribute("data-producerArray");
             const selectedProducerArray = producerIdcsv.split(',');
-            await rc.pauseConsumer(selectedProducerArray);
+            await rc.getConsumerId(selectedProducerArray);
           });
           buttonCell.appendChild(button);
           row.appendChild(nameCell);
@@ -118,24 +118,35 @@ class RoomClient {
           });
           button.setAttribute(`data-producerArray`, producerArray);
         });
-        console.log(dateNow, roomDetailsObj);
       }
     });
   }
 
 
-  async pauseConsumer(producerArr) {
-
+  async getConsumerId(producerArr) {
 
     const divElement = document.querySelector('#remoteAudios');
     const audioElementsArr = divElement.getElementsByTagName('audio');
 
     for (let i = 0; i < audioElementsArr.length; i++) {
       const audioId = audioElementsArr[i].getAttribute('data-producer_id');
-      console.log(audioId)
-    }
+      var consumerId;
 
+      producerArr.forEach(element => {
+        if (element == audioId) {
+          consumerId = audioElementsArr[i].getAttribute('id');
+          this.pauseConsumer(consumerId);
+        }
+      });
+    }
   }
+
+
+  async pauseConsumer(consumerId) {
+    await this.socket.emit('pause', consumerId);
+    console.log("pausedConsumer", consumerId);
+  }
+
 
   async createRoom(room_id) {
     await this.socket
@@ -162,8 +173,8 @@ class RoomClient {
           await this.initTransports(device);
           this.socket.emit("getProducers");
 
-          // this.produce(RoomClient.mediaType.video, videoSelect.value);
-          // this.produce(RoomClient.mediaType.audio, audioSelect.value);
+          this.produce(RoomClient.mediaType.video, videoSelect.value);
+          this.produce(RoomClient.mediaType.audio, audioSelect.value);
 
           this.getparticipantList(room_id);
 
