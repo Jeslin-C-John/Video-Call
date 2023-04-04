@@ -467,7 +467,6 @@ class RoomClient {
       producer = this.producers.get(producer_id);
 
       await producer.replaceTrack(params);
-      producer = await this.producerTransport.produce(params);
 
       if (!audio) {
         let elem = document.getElementById(producer_id);
