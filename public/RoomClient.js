@@ -86,44 +86,67 @@ class RoomClient {
 
   }
 
-  async updateRoom(room_id) {
+  updateRoom(room_id) {
     var room_id_string = room_id.toString();
     socket.emit('getParticipantList', room_id_string, (roomDetails) => {
       if (roomDetails != null) {
         var roomDetailsObj = JSON.parse(roomDetails);
-        var dateNow = new Date().toLocaleTimeString();
+
         var participantList = document.getElementById("participantList");
         participantList.innerHTML = "";
         roomDetailsObj.forEach(participantElement => {
           var row = document.createElement("tr");
           var nameCell = document.createElement("td");
           nameCell.innerText = participantElement.name;
-          var buttonCell = document.createElement("td");
-          var button = document.createElement("button");
-          button.innerText = "Mute";
-          button.id = participantElement.id;
-          button.addEventListener("click", async function () {
-            var producerIdcsv = button.getAttribute("data-producerArray");
+
+          var pauseButtonCell = document.createElement("td");
+          var pauseButton = document.createElement("button");
+          pauseButton.innerText = "Mute";
+          pauseButton.id = participantElement.id;
+          pauseButton.addEventListener("click", async function () {
+            var producerIdcsv = pauseButton.getAttribute("data-producerArray");
             const selectedProducerArray = producerIdcsv.split(',');
-            await rc.getConsumerId(selectedProducerArray);
+            var consumerArray = rc.getConsumerId(selectedProducerArray);
+            consumerArray.forEach(element => {
+              rc.pauseConsumer(element);
+            });
           });
-          buttonCell.appendChild(button);
+          pauseButtonCell.appendChild(pauseButton);
+
+          var resumeButtonCell = document.createElement("td");
+          var resumeButton = document.createElement("button");
+          resumeButton.innerText = "Unmute";
+          resumeButton.id = participantElement.id;
+          resumeButton.addEventListener("click", async function () {
+            var producerIdcsv = resumeButton.getAttribute("data-producerArray");
+            const selectedProducerArray = producerIdcsv.split(',');
+            var consumerArray = rc.getConsumerId(selectedProducerArray);
+            consumerArray.forEach(element => {
+              rc.resumeConsumer(element);
+            });
+          });
+          resumeButtonCell.appendChild(resumeButton);
+
           row.appendChild(nameCell);
-          row.appendChild(buttonCell);
+          row.appendChild(pauseButtonCell);
+          row.appendChild(resumeButtonCell);
           participantList.appendChild(row);
 
           var producerArray = [];
           participantElement.producers.forEach(producerElement => {
             producerArray.push(producerElement[0]);
           });
-          button.setAttribute(`data-producerArray`, producerArray);
+          pauseButton.setAttribute(`data-producerArray`, producerArray);
+          resumeButton.setAttribute(`data-producerArray`, producerArray);
         });
       }
     });
   }
 
 
-  async getConsumerId(producerArr) {
+  getConsumerId(producerArr) {
+
+    var confirmedConsumerArr = [];
 
     const divElement = document.querySelector('#remoteAudios');
     const audioElementsArr = divElement.getElementsByTagName('audio');
@@ -135,16 +158,21 @@ class RoomClient {
       producerArr.forEach(element => {
         if (element == audioId) {
           consumerId = audioElementsArr[i].getAttribute('id');
-          this.pauseConsumer(consumerId);
+          // this.pauseConsumer(consumerId);
+          confirmedConsumerArr.push(consumerId);
         }
       });
     }
+    return confirmedConsumerArr;
   }
 
 
   async pauseConsumer(consumerId) {
-    await this.socket.emit('pause', consumerId);
-    console.log("pausedConsumer", consumerId);
+    await this.socket.emit('pauseConsumer', consumerId);
+  }
+
+  async resumeConsumer(consumerId) {
+    await this.socket.emit('resumeConsumer', consumerId);
   }
 
 
