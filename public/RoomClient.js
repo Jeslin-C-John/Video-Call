@@ -464,26 +464,14 @@ class RoomClient {
 
       let producer_id = await this.producerLabel.get(type)
 
-      if (!audio) {
-        let elem = document.getElementById(producer_id);
-        elem.srcObject.getTracks().forEach(function (track) {
-          track.stop();
-        });
-        elem.parentNode.removeChild(elem);
-      }
+      producer = this.producers.get(producer_id);
 
       await producer.replaceTrack(params);
+      producer = await this.producerTransport.produce(params);
 
       if (!audio) {
-        elem = document.createElement("video");
+        let elem = document.getElementById(producer_id);
         elem.srcObject = stream;
-        elem.id = producer.id;
-        elem.playsinline = false;
-        elem.autoplay = true;
-        elem.muted = true;
-        elem.className = "vid";
-        this.localMediaEl.appendChild(elem);
-        this.handleFS(elem.id);
       }
 
 
