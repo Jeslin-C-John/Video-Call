@@ -426,12 +426,13 @@ class RoomClient {
     let stream
     try {
       stream = await navigator.mediaDevices.getUserMedia(mediaConstraints)
-      console.log(navigator.mediaDevices.getSupportedConstraints())
 
       const track = audio ? stream.getAudioTracks()[0] : stream.getVideoTracks()[0]
+
       const params = {
         track
       }
+
       if (!audio) {
         params.encodings = [
           {
@@ -461,41 +462,17 @@ class RoomClient {
         return
       }
 
-      let producer_id = this.producerLabel.get(type)
-      console.log('Close producer', producer_id)
+      let producer_id = await this.producerLabel.get(type)
 
-      this.socket.emit('producerClosed', {
-        producer_id
-      })
-
-      this.producers.get(producer_id).close()
-      this.producers.delete(producer_id)
-      this.producerLabel.delete(type)
-
-      if (type !== mediaType.audio) {
-        let elem = document.getElementById(producer_id)
+      if (!audio) {
+        let elem = document.getElementById(producer_id);
         elem.srcObject.getTracks().forEach(function (track) {
-          track.stop()
-        })
-        elem.parentNode.removeChild(elem)
+          track.stop();
+        });
+        elem.parentNode.removeChild(elem);
       }
 
-      switch (type) {
-        case mediaType.audio:
-          this.event(_EVENTS.stopAudio)
-          break
-        case mediaType.video:
-          this.event(_EVENTS.stopVideo)
-          break
-        default:
-          return
-      }
-
-      // await producer.replaceTrack(params);
-
-      producer = await this.producerTransport.produce(params);
-      console.log("Producer", producer);
-      this.producers.set(producer.id, producer);
+      await producer.replaceTrack(params);
 
       if (!audio) {
         elem = document.createElement("video");
@@ -509,47 +486,6 @@ class RoomClient {
         this.handleFS(elem.id);
       }
 
-      producer.on("trackended", () => {
-        this.closeProducer(type);
-      });
-
-      producer.on("transportclose", () => {
-        console.log("Producer transport close");
-        if (!audio) {
-          elem.srcObject.getTracks().forEach(function (track) {
-            track.stop();
-          });
-          elem.parentNode.removeChild(elem);
-        }
-        this.producers.delete(producer.id);
-      });
-
-      producer.on("close", () => {
-        console.log("Closing producer");
-        if (!audio) {
-          elem.srcObject.getTracks().forEach(function (track) {
-            track.stop();
-          });
-          elem.parentNode.removeChild(elem);
-        }
-        this.producers.delete(producer.id);
-      });
-
-      this.producerLabel.set(type, producer.id);
-
-      switch (type) {
-        case mediaType.audio:
-          this.event(_EVENTS.startAudio);
-          break;
-        case mediaType.video:
-          this.event(_EVENTS.startVideo);
-          break;
-        case mediaType.screen:
-          this.event(_EVENTS.startScreen);
-          break;
-        default:
-          return;
-      }
 
     } catch (err) {
       console.log('Produce error:', err)
