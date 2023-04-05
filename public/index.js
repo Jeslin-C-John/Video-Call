@@ -56,6 +56,7 @@ function roomOpen() {
   reveal(devicesButton);
   control.className = "";
   reveal(videoMedia);
+  reveal(participantList);
 }
 
 function hide(elem) {
@@ -101,6 +102,7 @@ function addListeners() {
     hide(copyButton);
     hide(devicesButton);
     reveal(login);
+    hide(participantList);
   });
 }
 
