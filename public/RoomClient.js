@@ -99,57 +99,112 @@ class RoomClient {
           var nameCell = document.createElement("td");
           nameCell.innerText = participantElement.name;
 
-          var pauseButtonCell = document.createElement("td");
-          var pauseButton = document.createElement("button");
-          pauseButton.innerText = "Mute";
-          pauseButton.id = participantElement.id;
-          pauseButton.addEventListener("click", async function () {
-            var producerIdcsv = pauseButton.getAttribute("data-producerArray");
+          var pauseAudioButtonCell = document.createElement("td");
+          var pauseAudioButton = document.createElement("button");
+          pauseAudioButton.innerText = "Mute Audio";
+          pauseAudioButton.id = participantElement.id;
+          pauseAudioButton.addEventListener("click", async function () {
+            var producerIdcsv = pauseAudioButton.getAttribute("data-producerArray");
             const selectedProducerArray = producerIdcsv.split(',');
-            var consumerArray = rc.getConsumerId(selectedProducerArray);
+            var consumerArray = rc.getAudioConsumerId(selectedProducerArray);
             consumerArray.forEach(element => {
               rc.pauseConsumer(element);
             });
           });
-          pauseButtonCell.appendChild(pauseButton);
+          pauseAudioButtonCell.appendChild(pauseAudioButton);
 
-          var resumeButtonCell = document.createElement("td");
-          var resumeButton = document.createElement("button");
-          resumeButton.innerText = "Unmute";
-          resumeButton.id = participantElement.id;
-          resumeButton.addEventListener("click", async function () {
-            var producerIdcsv = resumeButton.getAttribute("data-producerArray");
+          var resumeAudioButtonCell = document.createElement("td");
+          var resumeAudioButton = document.createElement("button");
+          resumeAudioButton.innerText = "Unmute Audio";
+          resumeAudioButton.id = participantElement.id;
+          resumeAudioButton.addEventListener("click", async function () {
+            var producerIdcsv = resumeAudioButton.getAttribute("data-producerArray");
             const selectedProducerArray = producerIdcsv.split(',');
-            var consumerArray = rc.getConsumerId(selectedProducerArray);
+            var consumerArray = rc.getAudioConsumerId(selectedProducerArray);
             consumerArray.forEach(element => {
               rc.resumeConsumer(element);
             });
           });
-          resumeButtonCell.appendChild(resumeButton);
+          resumeAudioButtonCell.appendChild(resumeAudioButton);
+
+          var pauseVideoButtonCell = document.createElement("td");
+          var pauseVideoButton = document.createElement("button");
+          pauseVideoButton.innerText = "Pause Video";
+          pauseVideoButton.id = participantElement.id;
+          pauseVideoButton.addEventListener("click", async function () {
+            var producerIdcsv = pauseVideoButton.getAttribute("data-producerArray");
+            const selectedProducerArray = producerIdcsv.split(',');
+            var consumerArray = rc.getVideoConsumerId(selectedProducerArray);
+            consumerArray.forEach(element => {
+              rc.pauseConsumer(element);
+            });
+          });
+          pauseVideoButtonCell.appendChild(pauseVideoButton);
+
+          var resumeVideoButtonCell = document.createElement("td");
+          var resumeVideoButton = document.createElement("button");
+          resumeVideoButton.innerText = "Play Video";
+          resumeVideoButton.id = participantElement.id;
+          resumeVideoButton.addEventListener("click", async function () {
+            var producerIdcsv = resumeVideoButton.getAttribute("data-producerArray");
+            const selectedProducerArray = producerIdcsv.split(',');
+            var consumerArray = rc.getVideoConsumerId(selectedProducerArray);
+            consumerArray.forEach(element => {
+              rc.resumeConsumer(element);
+            });
+          });
+          resumeVideoButtonCell.appendChild(resumeVideoButton);
 
           row.appendChild(nameCell);
-          row.appendChild(pauseButtonCell);
-          row.appendChild(resumeButtonCell);
+          row.appendChild(pauseAudioButtonCell);
+          row.appendChild(resumeAudioButtonCell);
+          row.appendChild(pauseVideoButtonCell);
+          row.appendChild(resumeVideoButtonCell);
           participantList.appendChild(row);
 
           var producerArray = [];
           participantElement.producers.forEach(producerElement => {
             producerArray.push(producerElement[0]);
           });
-          pauseButton.setAttribute(`data-producerArray`, producerArray);
-          resumeButton.setAttribute(`data-producerArray`, producerArray);
+          pauseAudioButton.setAttribute(`data-producerArray`, producerArray);
+          resumeAudioButton.setAttribute(`data-producerArray`, producerArray);
+          pauseVideoButton.setAttribute(`data-producerArray`, producerArray);
+          resumeVideoButton.setAttribute(`data-producerArray`, producerArray);
         });
       }
     });
   }
 
 
-  getConsumerId(producerArr) {
+  getAudioConsumerId(producerArr) {
 
     var confirmedConsumerArr = [];
 
     const divElement = document.querySelector('#remoteAudios');
     const audioElementsArr = divElement.getElementsByTagName('audio');
+
+    for (let i = 0; i < audioElementsArr.length; i++) {
+      const audioId = audioElementsArr[i].getAttribute('data-producer_id');
+      var consumerId;
+
+      producerArr.forEach(element => {
+        if (element == audioId) {
+          consumerId = audioElementsArr[i].getAttribute('id');
+          // this.pauseConsumer(consumerId);
+          confirmedConsumerArr.push(consumerId);
+        }
+      });
+    }
+    return confirmedConsumerArr;
+  }
+
+
+  getVideoConsumerId(producerArr) {
+
+    var confirmedConsumerArr = [];
+
+    const divElement = document.querySelector('#remoteVideos');
+    const audioElementsArr = divElement.getElementsByTagName('video');
 
     for (let i = 0; i < audioElementsArr.length; i++) {
       const audioId = audioElementsArr[i].getAttribute('data-producer_id');
