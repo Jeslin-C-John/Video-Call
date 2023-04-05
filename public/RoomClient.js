@@ -18,6 +18,7 @@ var audioProducerId = null;
 var videoProducerId = null;
 var sysAudio = false;
 let elem;
+var userName = null;
 
 class RoomClient {
   constructor(
@@ -72,6 +73,7 @@ class RoomClient {
         successCallback();
       }.bind(this)
     );
+    userName = null;
   }
 
   ////////// INIT /////////
@@ -95,6 +97,7 @@ class RoomClient {
         var participantList = document.getElementById("participantList");
         participantList.innerHTML = "";
         roomDetailsObj.forEach(participantElement => {
+          if (participantElement.name == userName) { return; }
           var row = document.createElement("tr");
           var nameCell = document.createElement("td");
           nameCell.innerText = participantElement.name;
@@ -258,6 +261,8 @@ class RoomClient {
 
           this.produce(RoomClient.mediaType.video, videoSelect.value);
           this.produce(RoomClient.mediaType.audio, audioSelect.value);
+
+          userName = document.getElementById("nameInput").value;
 
           this.getparticipantList(room_id);
 
