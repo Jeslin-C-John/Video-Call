@@ -19,6 +19,7 @@ var videoProducerId = null;
 var sysAudio = false;
 let elem;
 var userName = null;
+var roomDetailsObj;
 
 class RoomClient {
   constructor(
@@ -92,7 +93,7 @@ class RoomClient {
     var room_id_string = room_id.toString();
     socket.emit('getParticipantList', room_id_string, (roomDetails) => {
       if (roomDetails != null) {
-        var roomDetailsObj = JSON.parse(roomDetails);
+        roomDetailsObj = JSON.parse(roomDetails);
 
         var participantList = document.getElementById("participantList");
         participantList.innerHTML = "";
@@ -827,6 +828,7 @@ class RoomClient {
   }
 
   async consume(producer_id) {
+    this.updateRoom(this.room_id);
     //let info = await this.roomInfo()
 
     this.getConsumeStream(producer_id).then(
@@ -835,15 +837,41 @@ class RoomClient {
 
         let elem;
         if (kind === "video") {
-          elem = document.createElement("video");
+
+          const newParentDiv = document.createElement("div");
+          newParentDiv.className = "parent-div";
+          newParentDiv.setAttribute("data-RemVidConId", consumer.id);
+          newParentDiv.setAttribute("data-RemVidProId", producer_id);
+          const newChild1Div = document.createElement("div");
+          newChild1Div.className = "child-div1";
+          const elem = document.createElement("video");
           elem.srcObject = stream;
           elem.id = consumer.id;
+          let name = "";
+          roomDetailsObj.forEach((userArr) => {
+            userArr.producers.forEach((producerArr) => {
+              if (producerArr[0] == producer_id) {
+                name = userArr.name;
+              }
+            });
+          });
+          elem.setAttribute("data-user_name", name);
           elem.setAttribute("data-producer_id", producer_id);
           elem.playsinline = false;
           elem.autoplay = true;
-          elem.className = "vid";
-          this.remoteVideoEl.appendChild(elem);
+          elem.className = "vidRem";
+          newChild1Div.appendChild(elem);
+          newParentDiv.appendChild(newChild1Div);
+          this.remoteVideoEl.appendChild(newParentDiv);
           this.handleFS(elem.id);
+          const newChild2Div = document.createElement("div");
+          newChild2Div.className = "child-div2";
+          const Pname = document.createElement("p");
+          Pname.textContent = name;
+          newChild2Div.appendChild(Pname);
+          newParentDiv.appendChild(newChild2Div);
+
+
         } else {
           elem = document.createElement("audio");
           elem.srcObject = stream;
@@ -923,7 +951,7 @@ class RoomClient {
 
     if (type !== mediaType.audio) {
       let elem = document.getElementById(producer_id);
-      console.log("elem.srcObject", elem.srcObject);
+      console.log("**********", elem.srcObject);
       elem.srcObject.getTracks().forEach(function (track) {
         track.stop();
       });
@@ -997,11 +1025,13 @@ class RoomClient {
   }
 
   removeConsumer(consumer_id) {
-    let elem = document.getElementById(consumer_id);
-    elem.srcObject.getTracks().forEach(function (track) {
-      track.stop();
-    });
-    elem.parentNode.removeChild(elem);
+    // let elem = document.getElementById(consumer_id);
+    // elem.srcObject.getTracks().forEach(function (track) {
+    //   track.stop();
+    // });
+    // elem.parentNode.removeChild(elem);
+    const myDiv = document.querySelector(`[data-RemVidConId="${consumer_id}"]`);
+    myDiv.remove();
 
     this.consumers.delete(consumer_id);
   }
@@ -1015,6 +1045,10 @@ class RoomClient {
       });
       elem.parentNode.removeChild(elem);
     }
+
+    const myDiv = document.querySelector(`[data-RemVidProId="${videoProducerId}"]`);
+    if (myDiv != null)
+      myDiv.remove();
 
     sysAudio = false;
 
