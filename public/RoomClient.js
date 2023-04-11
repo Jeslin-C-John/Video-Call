@@ -770,15 +770,15 @@ class RoomClient {
 
         videoProducerId = producer.id;
 
-        elem = document.createElement("video");
-        elem.srcObject = stream;
-        elem.id = producer.id;
-        elem.playsinline = false;
-        elem.autoplay = true;
-        elem.muted = true;
-        elem.className = "vid";
-        this.localMediaEl.appendChild(elem);
-        this.handleFS(elem.id);
+        // elem = document.createElement("video");
+        // elem.srcObject = stream;
+        // elem.id = producer.id;
+        // elem.playsinline = false;
+        // elem.autoplay = true;
+        // elem.muted = true;
+        // elem.className = "vid";
+        // this.localMediaEl.appendChild(elem);
+        // this.handleFS(elem.id);
 
         producer.on("trackended", () => {
           this.closeProducer(type);
@@ -949,7 +949,7 @@ class RoomClient {
     this.producers.delete(producer_id);
     this.producerLabel.delete(type);
 
-    if (type !== mediaType.audio) {
+    if (type == mediaType.video) {
       let elem = document.getElementById(producer_id);
       console.log("**********", elem.srcObject);
       elem.srcObject.getTracks().forEach(function (track) {
@@ -1037,14 +1037,14 @@ class RoomClient {
   }
 
   exit(offline = false) {
-    if (videoProducerId != null) {
-      let elem = document.getElementById(videoProducerId);
-      console.log("elem.srcObject", elem.srcObject);
-      elem.srcObject.getTracks().forEach(function (track) {
-        track.stop();
-      });
-      elem.parentNode.removeChild(elem);
-    }
+    // if (videoProducerId != null) {
+    //   let elem = document.getElementById(videoProducerId);
+    //   console.log("elem.srcObject", elem.srcObject);
+    //   elem.srcObject.getTracks().forEach(function (track) {
+    //     track.stop();
+    //   });
+    //   elem.parentNode.removeChild(elem);
+    // }
 
     const myDiv = document.querySelector(`[data-RemVidProId="${videoProducerId}"]`);
     if (myDiv != null)
